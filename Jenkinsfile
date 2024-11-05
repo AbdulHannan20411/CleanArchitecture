@@ -27,13 +27,13 @@ pipeline {
             }
         }
         stage('Publish') {
-            steps {
-                dir('D:/My Projects/ToDoApplication') {
-                    // Publish the application
-                    bat "dotnet publish ToDoApplication.sln --configuration Release -o ${env.BUILD_DIR}"
-                }
-            }
+    steps {
+        dir('D:/My Projects/ToDoApplication') {
+            bat 'dotnet publish "ToDoApplication.sln" --configuration Release -o "D:/My Projects/Build/ToDo_Build"'
         }
+    }
+}
+
         stage('Deploy') {
             steps {
                 script {
