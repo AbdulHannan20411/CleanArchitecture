@@ -15,29 +15,37 @@ pipeline {
 
         stage('Restore Dependencies') {
             steps {
-                // Restore dependencies using .NET CLI
-                bat 'dotnet restore ToDoApplication.sln'
+                dir('ToDo') {  // Change to the directory where the solution is located
+                    // Restore dependencies using .NET CLI
+                    bat 'dotnet restore ToDoApplication.sln'
+                }
             }
         }
 
         stage('Build') {
             steps {
-                // Build the project in Release mode
-                bat 'dotnet build --configuration Release ToDoApplication.sln'
+                dir('ToDo') {
+                    // Build the project in Release mode
+                    bat 'dotnet build --configuration Release ToDoApplication.sln'
+                }
             }
         }
 
         stage('Test') {
             steps {
-                // Run tests
-                bat 'dotnet test ToDoApplication.sln'
+                dir('ToDo') {
+                    // Run tests
+                    bat 'dotnet test ToDoApplication.sln'
+                }
             }
         }
 
         stage('Publish') {
             steps {
-                // Publish the build to a folder for deployment
-                bat "dotnet publish -c Release -o ${env.BUILD_DIR} ToDoApplication.sln"
+                dir('ToDo') {
+                    // Publish the build to a folder for deployment
+                    bat "dotnet publish -c Release -o ${env.BUILD_DIR}"
+                }
             }
         }
 
@@ -45,7 +53,6 @@ pipeline {
             steps {
                 // Deploy the published files (if needed)
                 echo "Deploying files to ${env.BUILD_DIR}..."
-                // Your deploy command here
             }
         }
     }
