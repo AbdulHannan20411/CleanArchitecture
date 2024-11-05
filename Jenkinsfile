@@ -9,7 +9,7 @@ pipeline {
         stage('Checkout') {
             steps {
                 // Clone the repository
-                git branch: 'main', url: 'https://github.com/AbdulHannan20411/CleanArchitecture.git'
+                git branch: 'master', url: 'https://github.com/AbdulHannan20411/CleanArchitecture.git'
             }
         }
 
