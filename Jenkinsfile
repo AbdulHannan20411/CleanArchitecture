@@ -2,9 +2,9 @@ pipeline {
     agent any
     environment {
         BUILD_DIR = "D:/My Projects/Build/ToDo_Build" // Directory for published files
-        IIS_SITE_NAME = "ToDo" // Change this to your IIS site name
-        IIS_APP_POOL = "ToDo" // Change this to your IIS app pool name
-        IIS_PATH = "D:\My Projects\Build\ToDo_Build" // Change to your IIS site path
+        IIS_SITE_NAME = "ToDo" // IIS site name
+        IIS_APP_POOL = "ToDo" // IIS app pool name
+        IIS_PATH = "C:/inetpub/wwwroot/ToDo" // IIS site path
     }
     stages {
         stage('Checkout') {
@@ -45,7 +45,7 @@ pipeline {
                     // Copy new files to the IIS directory
                     bat "xcopy /E /I /Y ${env.BUILD_DIR}\\* ${env.IIS_PATH}\\"
 
-                    // Optional: Restart the IIS Application Pool to ensure the new files are loaded
+                    // Restart the IIS Application Pool to ensure the new files are loaded
                     bat "appcmd recycle apppool /apppool.name:${env.IIS_APP_POOL}"
                 }
             }
