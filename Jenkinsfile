@@ -27,16 +27,19 @@ pipeline {
             }
         }
         stage('Publish') {
-    steps {
-        dir('D:/My Projects/ToDoApplication') {
-            bat 'dotnet publish "ToDoApplication.sln" --configuration Release -o "D:/My Projects/Build/ToDo_Build"'
+            steps {
+                dir('D:/My Projects/ToDoApplication') {
+                    bat 'dotnet publish "ToDoApplication.sln" --configuration Release -o "D:/My Projects/Build/ToDo_Build"'
+                }
+            }
         }
-    }
-}
-
         stage('Deploy') {
             steps {
                 script {
+                    echo "Stopping IIS Application Pool..."
+                    // Stop the IIS Application Pool
+                    bat "appcmd stop apppool /apppool.name:${env.IIS_APP_POOL}"
+
                     echo "Deploying to IIS..."
                     
                     // Remove old files
@@ -45,8 +48,9 @@ pipeline {
                     // Copy new files to the IIS directory
                     bat "xcopy /E /I /Y ${env.BUILD_DIR}\\* ${env.IIS_PATH}\\"
 
-                    // Restart the IIS Application Pool to ensure the new files are loaded
-                    bat "appcmd recycle apppool /apppool.name:${env.IIS_APP_POOL}"
+                    echo "Starting IIS Application Pool..."
+                    // Start the IIS Application Pool again
+                    bat "appcmd start apppool /apppool.name:${env.IIS_APP_POOL}"
                 }
             }
         }
