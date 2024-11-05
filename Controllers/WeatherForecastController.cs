@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace ToDoApplication.Controllers
 {
     [ApiController]
-    [Route("/cat")]
+    [Route("/weather")]
     public class WeatherForecastController : ControllerBase
     {
         private static readonly string[] Summaries = new[]
