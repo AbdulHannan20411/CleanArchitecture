@@ -1,7 +1,7 @@
 pipeline {
     agent any
     environment {
-        BUILD_DIR = "D:/My Projects/Build/ToDo_Build" // Directory for published files
+        TEMP_BUILD_DIR = "D:/My Projects/Build/ToDo_Build" // Temporary directory for build output
         IIS_SITE_NAME = "ToDo" // IIS site name
         IIS_APP_POOL = "ToDo" // IIS app pool name
         IIS_PATH = "C:/inetpub/wwwroot/ToDo" // IIS site path
@@ -26,65 +26,44 @@ pipeline {
                 }
             }
         }
-    stage('Publish') {
-    steps {
-        // Remove old files
-        echo "Removing old files from ${env.IIS_PATH}..."
-        bat "if exist \"${env.IIS_PATH}\\*\" del /q \"${env.IIS_PATH}\\*\""
+        stage('Publish') {
+            steps {
+                script {
+                    echo "Publishing build output to temporary directory: ${env.TEMP_BUILD_DIR}..."
+                    
+                    // Publish output to the build directory (not directly to IIS)
+                    dir('D:/My Projects/ToDoApplication') {
+                        bat "dotnet publish \"D:/My Projects/ToDoApplication/ToDoApplication.sln\" --configuration Release -o \"${env.TEMP_BUILD_DIR}\""
+                    }
 
-        script {
-            // Ensure the BUILD_DIR path is properly formatted for Windows
-            def formattedBuildDir = "${env.BUILD_DIR.replaceAll('\\\\', '/').replaceAll(' ', '\\ ')}"
-
-            // Publish the build output
-            dir('D:/My Projects/ToDoApplication') {
-                bat """
-                    dotnet publish "ToDoApplication.sln" --configuration Release -o "${formattedBuildDir}"
-                """
+                    // Add a check to list files in the build directory to confirm publishing
+                    echo "Listing files in the build directory:"
+                    bat "dir \"${env.TEMP_BUILD_DIR}\""
+                }
+            }
+        }
+        stage('Deploy') {
+            steps {
+                script {
+                    echo "Deploying build output to IIS path: ${env.IIS_PATH}..."
+                    
+                    // Copy files from build directory to IIS directory
+                    bat "xcopy /E /I /Y \"${env.TEMP_BUILD_DIR}\\*\" \"${env.IIS_PATH}\\\""
+                    
+                    echo "Starting IIS Application Pool..."
+                    // Start the IIS application pool to serve the new deployment
+                    bat """
+                    if exist "C:\\Windows\\System32\\inetsrv\\appcmd.exe" (
+                        C:\\Windows\\System32\\inetsrv\\appcmd start apppool /appPool.name:"${env.IIS_APP_POOL}"
+                    ) else (
+                        echo "AppCmd not found. Ensure IIS is installed and accessible."
+                    )
+                    """
+                }
             }
         }
     }
-}
 
-
-       stage('Deploy') {
-    steps {
-        script {
-            def appcmdPath = "C:\\Windows\\System32\\inetsrv\\appcmd"
-            
-            echo "Checking if IIS Application Pool exists..."
-            def appPoolExists = bat(script: "${appcmdPath} list apppool /name:\"${env.IIS_APP_POOL}\"", returnStatus: true) == 0
-            
-            if (appPoolExists) {
-                echo "Stopping IIS Application Pool..."
-                bat "${appcmdPath} stop apppool /appPool.name:\"${env.IIS_APP_POOL}\""
-            } else {
-                echo "Application Pool ${env.IIS_APP_POOL} does not exist. Skipping stop command."
-            }
-
-            echo "Deploying to IIS..."
-
-            // Remove old files
-           // echo "Removing old files from ${env.IIS_PATH}..."
-           // bat "if exist \"${env.IIS_PATH}\\*\" del /q \"${env.IIS_PATH}\\*\""
-            
-            // Copy new files to the IIS directory
-            echo "Copying new files to ${env.IIS_PATH}..."
-            bat "xcopy /E /I /Y \"${env.BUILD_DIR}\\*\" \"${env.IIS_PATH}\\\""
-
-            echo "Starting IIS Application Pool..."
-            if (appPoolExists) {
-                bat "${appcmdPath} start apppool /appPool.name:\"${env.IIS_APP_POOL}\""
-            } else {
-                echo "Skipping start command since the Application Pool does not exist."
-            }
-        }
-    }
-}
-
-
-
-    }
     post {
         failure {
             echo 'Build or deployment failed.'
