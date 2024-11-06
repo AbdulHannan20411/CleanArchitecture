@@ -26,15 +26,26 @@ pipeline {
                 }
             }
         }
-      stage('Publish') {
+    stage('Publish') {
     steps {
-        dir('D:/My Projects/ToDoApplication') {
-            bat """
-                dotnet publish "ToDoApplication.sln" --configuration Release -o "${env.BUILD_DIR.replaceAll('\\\\', '/').replaceAll(' ', '\\ ')}"
-            """
+        // Remove old files
+        echo "Removing old files from ${env.IIS_PATH}..."
+        bat "if exist \"${env.IIS_PATH}\\*\" del /q \"${env.IIS_PATH}\\*\""
+
+        script {
+            // Ensure the BUILD_DIR path is properly formatted for Windows
+            def formattedBuildDir = "${env.BUILD_DIR.replaceAll('\\\\', '/').replaceAll(' ', '\\ ')}"
+
+            // Publish the build output
+            dir('D:/My Projects/ToDoApplication') {
+                bat """
+                    dotnet publish "ToDoApplication.sln" --configuration Release -o "${formattedBuildDir}"
+                """
+            }
         }
     }
 }
+
 
        stage('Deploy') {
     steps {
@@ -54,8 +65,8 @@ pipeline {
             echo "Deploying to IIS..."
 
             // Remove old files
-            echo "Removing old files from ${env.IIS_PATH}..."
-            bat "if exist \"${env.IIS_PATH}\\*\" del /q \"${env.IIS_PATH}\\*\""
+           // echo "Removing old files from ${env.IIS_PATH}..."
+           // bat "if exist \"${env.IIS_PATH}\\*\" del /q \"${env.IIS_PATH}\\*\""
             
             // Copy new files to the IIS directory
             echo "Copying new files to ${env.IIS_PATH}..."
