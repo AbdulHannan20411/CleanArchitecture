@@ -69,8 +69,8 @@ pipeline {
            // bat "if exist \"${env.IIS_PATH}\\*\" del /q \"${env.IIS_PATH}\\*\""
             
             // Copy new files to the IIS directory
-            echo "Copying new files to ${env.IIS_PATH}..."
-            bat "xcopy /E /I /Y \"${env.BUILD_DIR}\\*\" \"${env.IIS_PATH}\\\""
+           // echo "Copying new files to ${env.IIS_PATH}..."
+           // bat "xcopy /E /I /Y \"${env.BUILD_DIR}\\*\" \"${env.IIS_PATH}\\\""
 
             echo "Starting IIS Application Pool..."
             if (appPoolExists) {
