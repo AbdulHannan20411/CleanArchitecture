@@ -46,8 +46,7 @@ pipeline {
     }
 }
 
-
-       stage('Deploy') {
+stage('Deploy') {
     steps {
         script {
             def appcmdPath = "C:\\Windows\\System32\\inetsrv\\appcmd"
@@ -63,14 +62,7 @@ pipeline {
             }
 
             echo "Deploying to IIS..."
-
-            // Remove old files
-           // echo "Removing old files from ${env.IIS_PATH}..."
-           // bat "if exist \"${env.IIS_PATH}\\*\" del /q \"${env.IIS_PATH}\\*\""
-            
-            // Copy new files to the IIS directory
-           // echo "Copying new files to ${env.IIS_PATH}..."
-           // bat "xcopy /E /I /Y \"${env.BUILD_DIR}\\*\" \"${env.IIS_PATH}\\\""
+            // No need to delete or copy files if publish path is the same as the IIS path
 
             echo "Starting IIS Application Pool..."
             if (appPoolExists) {
@@ -81,6 +73,7 @@ pipeline {
         }
     }
 }
+
 
 
 
