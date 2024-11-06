@@ -26,13 +26,16 @@ pipeline {
                 }
             }
         }
-        stage('Publish') {
-            steps {
-                dir('D:/My Projects/ToDoApplication') {
-                    bat 'dotnet publish "ToDoApplication.sln" --configuration Release -o "${env.BUILD_DIR}"'
-                }
-            }
+      stage('Publish') {
+    steps {
+        dir('D:/My Projects/ToDoApplication') {
+            bat """
+                dotnet publish "ToDoApplication.sln" --configuration Release -o "${env.BUILD_DIR.replaceAll('\\\\', '/').replaceAll(' ', '\\ ')}"
+            """
         }
+    }
+}
+
        stage('Deploy') {
     steps {
         script {
