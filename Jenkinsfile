@@ -1,7 +1,7 @@
 pipeline {
     agent any
     environment {
-        TEMP_BUILD_DIR = "D:/My Projects/Build/ToDo_Build_Temp" // Temporary directory for build output
+        TEMP_BUILD_DIR = "D:/My Projects/Build/ToDo_Build" // Temporary directory for build output
         IIS_SITE_NAME = "ToDo" // IIS site name
         IIS_APP_POOL = "ToDo" // IIS app pool name
         IIS_PATH = "C:/inetpub/wwwroot/ToDo" // IIS site path
@@ -26,28 +26,30 @@ pipeline {
                 }
             }
         }
-
         stage('Publish') {
-    steps {
-        script {
-            echo "Publishing build output directly to the IIS path: ${env.IIS_PATH}..."
-            
-            // Use quotes around paths to handle spaces
-            dir('D:/My Projects/ToDoApplication') {
-                bat "dotnet publish \"D:/My Projects/ToDoApplication/ToDoApplication.sln\" --configuration Release -o \"${env.IIS_PATH}\""
+            steps {
+                script {
+                    echo "Publishing build output to temporary directory: ${env.TEMP_BUILD_DIR}..."
+                    
+                    // Publish output to the build directory (not directly to IIS)
+                    dir('D:/My Projects/ToDoApplication') {
+                        bat "dotnet publish \"D:/My Projects/ToDoApplication/ToDoApplication.sln\" --configuration Release -o \"${env.TEMP_BUILD_DIR}\""
+                    }
+
+                    // Add a check to list files in the build directory to confirm publishing
+                    echo "Listing files in the build directory:"
+                    bat "dir \"${env.TEMP_BUILD_DIR}\""
+                }
             }
-            
-            // Add a check to list files in the IIS directory
-            echo "Listing files in the IIS path:"
-            bat "dir \"${env.IIS_PATH}\""
         }
-    }
-}
-
-
         stage('Deploy') {
             steps {
                 script {
+                    echo "Deploying build output to IIS path: ${env.IIS_PATH}..."
+                    
+                    // Copy files from build directory to IIS directory
+                    bat "xcopy /E /I /Y \"${env.TEMP_BUILD_DIR}\\*\" \"${env.IIS_PATH}\\\""
+                    
                     echo "Starting IIS Application Pool..."
                     // Start the IIS application pool to serve the new deployment
                     bat """
