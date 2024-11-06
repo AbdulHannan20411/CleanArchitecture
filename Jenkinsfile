@@ -26,19 +26,22 @@ pipeline {
                 }
             }
         }
-        stage('Publish') {
-            steps {
-                script {
-                   
-                    
-                    echo "Publishing build output directly to the IIS path: ${env.IIS_PATH}..."
-                    // Publish output directly to the IIS directory
-                    dir('D:/My Projects/ToDoApplication') {
-                        bat "dotnet publish ToDoApplication.sln --configuration Release -o \"${env.IIS_PATH}\""
-                    }
-                }
+       stage('Publish') {
+    steps {
+        script {
+            echo "Publishing build output directly to the IIS path: ${env.IIS_PATH}..."
+            // Publish output directly to the IIS directory
+            dir('D:/My Projects/ToDoApplication') {
+                bat "dotnet publish D:/My Projects/ToDoApplication/ToDoApplication.sln --configuration Release -o \"${env.IIS_PATH}\""
             }
+            
+            // Add a check to list files in the IIS directory
+            echo "Listing files in the IIS path:"
+            bat "dir \"${env.IIS_PATH}\""
         }
+    }
+}
+
         stage('Deploy') {
             steps {
                 script {
