@@ -26,53 +26,44 @@ pipeline {
                 }
             }
         }
-        stage('Publish') {
-            steps {
-                script {
-                    echo "Stopping IIS Application Pool before publishing..."
-                    // Stop the IIS application pool and handle cases where it might not be running
-                    bat """
-                    if exist "C:\\Windows\\System32\\inetsrv\\appcmd.exe" (
-                        C:\\Windows\\System32\\inetsrv\\appcmd stop apppool /appPool.name:"${env.IIS_APP_POOL}" || echo "App pool ${env.IIS_APP_POOL} might already be stopped."
-                    ) else (
-                        echo "AppCmd not found, ensure IIS is installed and accessible."
-                    )
-                    """
-                    
-                    // Publish to a temporary build directory with quotes for paths
-                    echo "Publishing build output to ${env.TEMP_BUILD_DIR}..."
-                    dir('D:/My Projects/ToDoApplication') {
-                        bat "dotnet publish ToDoApplication.sln --configuration Release -o \"${env.TEMP_BUILD_DIR}\""
-                    }
-                }
-            }
-        }
-        stage('Deploy') {
-            steps {
-                script {
-                    // Clear the old files in IIS path
-                    echo "Removing old files from ${env.IIS_PATH}..."
-                    bat "if exist \"${env.IIS_PATH}\" rmdir /S /Q \"${env.IIS_PATH}\""
-                    
-                    // Recreate the IIS directory to ensure it's present for deployment
-                    bat "mkdir \"${env.IIS_PATH}\""
-                    
-                    // Copy new files to IIS path
-                    echo "Deploying new files to ${env.IIS_PATH}..."
-                    bat "xcopy /E /H /I /Y \"${env.TEMP_BUILD_DIR}\\*\" \"${env.IIS_PATH}\""
-                    
-                    echo "Starting IIS Application Pool..."
-                    bat """
-                    if exist "C:\\Windows\\System32\\inetsrv\\appcmd.exe" (
-                        C:\\Windows\\System32\\inetsrv\\appcmd start apppool /appPool.name:"${env.IIS_APP_POOL}"
-                    ) else (
-                        echo "AppCmd not found, ensure IIS is installed and accessible."
-                    )
-                    """
-                }
+       stage('Publish') {
+    steps {
+        script {
+            echo "Stopping IIS Application Pool before publishing..."
+            // Stop the IIS application pool if it exists, to prevent deployment conflicts
+            bat """
+            if exist "C:\\Windows\\System32\\inetsrv\\appcmd.exe" (
+                C:\\Windows\\System32\\inetsrv\\appcmd stop apppool /appPool.name:"${env.IIS_APP_POOL}" || echo "App pool ${env.IIS_APP_POOL} might already be stopped."
+            ) else (
+                echo "AppCmd not found. Ensure IIS is installed and accessible."
+            )
+            """
+            
+            echo "Publishing build output directly to the IIS path: ${env.IIS_PATH}..."
+            // Publish output directly to the IIS directory
+            dir('D:/My Projects/ToDoApplication') {
+                bat "dotnet publish ToDoApplication.sln --configuration Release -o \"${env.IIS_PATH}\""
             }
         }
     }
+}
+
+stage('Deploy') {
+    steps {
+        script {
+            echo "Starting IIS Application Pool..."
+            // Start the IIS application pool to serve the new deployment
+            bat """
+            if exist "C:\\Windows\\System32\\inetsrv\\appcmd.exe" (
+                C:\\Windows\\System32\\inetsrv\\appcmd start apppool /appPool.name:"${env.IIS_APP_POOL}"
+            ) else (
+                echo "AppCmd not found. Ensure IIS is installed and accessible."
+            )
+            """
+        }
+    }
+}
+
     post {
         failure {
             echo 'Build or deployment failed.'
