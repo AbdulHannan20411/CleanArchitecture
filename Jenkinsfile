@@ -26,13 +26,15 @@ pipeline {
                 }
             }
         }
-       stage('Publish') {
+
+        stage('Publish') {
     steps {
         script {
             echo "Publishing build output directly to the IIS path: ${env.IIS_PATH}..."
-            // Publish output directly to the IIS directory
+            
+            // Use quotes around paths to handle spaces
             dir('D:/My Projects/ToDoApplication') {
-                bat "dotnet publish D:/My Projects/ToDoApplication/ToDoApplication.sln --configuration Release -o \"${env.IIS_PATH}\""
+                bat "dotnet publish \"D:/My Projects/ToDoApplication/ToDoApplication.sln\" --configuration Release -o \"${env.IIS_PATH}\""
             }
             
             // Add a check to list files in the IIS directory
@@ -41,6 +43,7 @@ pipeline {
         }
     }
 }
+
 
         stage('Deploy') {
             steps {
