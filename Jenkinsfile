@@ -19,6 +19,15 @@ pipeline {
             }
         }
 
+        stage('Stop IIS App Pool') {
+            steps {
+                script {
+                    // Ensure the IIS app pool is stopped before the build
+                    bat "\"${env.APPCMD_PATH}\" stop apppool /apppool.name:\"${env.IIS_APP_POOL}\""
+                }
+            }
+        }
+
         stage('Restore Packages') {
             steps {
                 dir("${env.PROJECT_DIR}") {
@@ -38,6 +47,10 @@ pipeline {
         stage('Publish Build') {
             steps {
                 dir("${env.PROJECT_DIR}") {
+                    // Ensure that the IIS app pool remains stopped during publishing
+                    script {
+                        bat "\"${env.APPCMD_PATH}\" stop apppool /apppool.name:\"${env.IIS_APP_POOL}\""
+                    }
                     bat "dotnet publish \"${env.PROJECT_DIR}/ToDoApplication.sln\" --configuration Release -o \"${env.TEMP_BUILD_DIR}\""
                 }
             }
@@ -46,13 +59,10 @@ pipeline {
         stage('Deploy to IIS') {
             steps {
                 script {
-                    // Stop the IIS app pool using the full path to appcmd
-                    bat "\"${env.APPCMD_PATH}\" stop apppool /apppool.name:\"${env.IIS_APP_POOL}\""
-
                     // Copy the published files to the IIS directory
                     bat "xcopy /E /Y /I \"${env.TEMP_BUILD_DIR}\\*\" \"${env.IIS_PATH}\""
 
-                    // Start the IIS app pool using the full path to appcmd
+                    // Start the IIS app pool after deployment
                     bat "\"${env.APPCMD_PATH}\" start apppool /apppool.name:\"${env.IIS_APP_POOL}\""
                 }
             }
