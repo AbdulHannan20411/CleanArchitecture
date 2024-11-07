@@ -1,73 +1,70 @@
 pipeline {
     agent any
+
     environment {
-        TEMP_BUILD_DIR = "D:/My Projects/Build/ToDo_Build" // Temporary directory for build output
-        IIS_SITE_NAME = "ToDo" // IIS site name
-        IIS_APP_POOL = "ToDo" // IIS app pool name
-        IIS_PATH = "C:/inetpub/wwwroot/ToDo" // IIS site path
+        TEMP_BUILD_DIR = 'D:/My Projects/Build/ToDo_Build'
+        IIS_SITE_NAME = 'ToDo'
+        IIS_APP_POOL = 'ToDo'
+        IIS_PATH = 'C:/inetpub/wwwroot/ToDo'
+        GIT_CREDENTIALS_ID = 'Vinciio'
+        GIT_URL = 'https://github.com/AbdulHannan20411/CleanArchitecture.git'
+        PROJECT_DIR = 'D:/My Projects/ToDoApplication'
+        APPCMD_PATH = 'C:/Windows/System32/inetsrv/appcmd.exe'
     }
+
     stages {
-        stage('Checkout') {
+        stage('Checkout Code') {
             steps {
-                git credentialsId: 'Vinciio', url: 'https://github.com/AbdulHannan20411/CleanArchitecture.git'
+                git credentialsId: "${env.GIT_CREDENTIALS_ID}", url: "${env.GIT_URL}"
             }
         }
-        stage('Restore Dependencies') {
+
+        stage('Restore Packages') {
             steps {
-                dir('D:/My Projects/ToDoApplication') {
+                dir("${env.PROJECT_DIR}") {
                     bat 'dotnet restore ToDoApplication.sln'
                 }
             }
         }
-        stage('Build') {
+
+        stage('Build Solution') {
             steps {
-                dir('D:/My Projects/ToDoApplication') {
+                dir("${env.PROJECT_DIR}") {
                     bat 'dotnet build ToDoApplication.sln --configuration Release'
                 }
             }
         }
-        stage('Publish') {
-            steps {
-                script {
-                    echo "Publishing build output to temporary directory: ${env.TEMP_BUILD_DIR}..."
-                    
-                    // Publish output to the build directory (not directly to IIS)
-                    dir('D:/My Projects/ToDoApplication') {
-                        bat "dotnet publish \"D:/My Projects/ToDoApplication/ToDoApplication.sln\" --configuration Release -o \"${env.TEMP_BUILD_DIR}\""
-                    }
 
-                    // Add a check to list files in the build directory to confirm publishing
-                    echo "Listing files in the build directory:"
-                    bat "dir \"${env.TEMP_BUILD_DIR}\""
+        stage('Publish Build') {
+            steps {
+                dir("${env.PROJECT_DIR}") {
+                    bat "dotnet publish \"${env.PROJECT_DIR}/ToDoApplication.sln\" --configuration Release -o \"${env.TEMP_BUILD_DIR}\""
                 }
             }
         }
-        stage('Deploy') {
+
+        stage('Deploy to IIS') {
             steps {
                 script {
-                    echo "Deploying build output to IIS path: ${env.IIS_PATH}..."
-                    
-                    // Copy files from build directory to IIS directory
-                    bat "xcopy /E /I /Y \"${env.TEMP_BUILD_DIR}\\*\" \"${env.IIS_PATH}\\\""
-                    
-                    echo "Starting IIS Application Pool..."
-                    // Start the IIS application pool to serve the new deployment
-                    bat """
-                    if exist "C:\\Windows\\System32\\inetsrv\\appcmd.exe" (
-                        C:\\Windows\\System32\\inetsrv\\appcmd start apppool /appPool.name:"${env.IIS_APP_POOL}"
-                    ) else (
-                        echo "AppCmd not found. Ensure IIS is installed and accessible."
-                    )
-                    """
+                    // Stop the IIS app pool using the full path to appcmd
+                    bat "\"${env.APPCMD_PATH}\" stop apppool /apppool.name:\"${env.IIS_APP_POOL}\""
+
+                    // Copy the published files to the IIS directory
+                    bat "xcopy /E /Y /I \"${env.TEMP_BUILD_DIR}\\*\" \"${env.IIS_PATH}\""
+
+                    // Start the IIS app pool using the full path to appcmd
+                    bat "\"${env.APPCMD_PATH}\" start apppool /apppool.name:\"${env.IIS_APP_POOL}\""
                 }
             }
         }
     }
 
     post {
+        success {
+            echo 'Deployment succeeded!'
+        }
         failure {
-            echo 'Build or deployment failed.'
-            cleanWs()
+            echo 'Deployment failed. Please check the logs for more details.'
         }
     }
 }
