@@ -22,8 +22,8 @@ pipeline {
         stage('Stop IIS App Pool') {
             steps {
                 script {
-                    // Ensure the IIS app pool is stopped before the build
-                    bat "\"${env.APPCMD_PATH}\" stop apppool /apppool.name:\"${env.IIS_APP_POOL}\""
+                    // Stop IIS app pool; continue even if it's already stopped
+                    bat returnStatus: true, script: "\"${env.APPCMD_PATH}\" stop apppool /apppool.name:\"${env.IIS_APP_POOL}\""
                 }
             }
         }
@@ -47,9 +47,9 @@ pipeline {
         stage('Publish Build') {
             steps {
                 dir("${env.PROJECT_DIR}") {
-                    // Ensure that the IIS app pool remains stopped during publishing
+                    // Ensure IIS app pool is stopped before publishing
                     script {
-                        bat "\"${env.APPCMD_PATH}\" stop apppool /apppool.name:\"${env.IIS_APP_POOL}\""
+                        bat returnStatus: true, script: "\"${env.APPCMD_PATH}\" stop apppool /apppool.name:\"${env.IIS_APP_POOL}\""
                     }
                     bat "dotnet publish \"${env.PROJECT_DIR}/ToDoApplication.sln\" --configuration Release -o \"${env.TEMP_BUILD_DIR}\""
                 }
