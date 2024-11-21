@@ -1,61 +1,62 @@
-name: Deploy ToDo Application to IIS
+name: CI/CD Pipeline
 
 on:
   push:
     branches:
-      - master  # Trigger workflow on push to the 'master' branch
+      - master
   pull_request:
     branches:
-      - master  # Trigger workflow on pull request to the 'master' branch
-
-env:
-  BUILD_DIR: D:/My Projects/Build/ToDo_Build
-  IIS_SITE_NAME: ToDo
-  IIS_APP_POOL: ToDo
-  IIS_PATH: C:/inetpub/wwwroot/ToDo
+      - master
 
 jobs:
-  deploy:
+  build_and_deploy:
     runs-on: windows-latest
 
     steps:
+      # Checkout the code from the repository
       - name: Checkout Code
         uses: actions/checkout@v4
 
+      # Setup .NET Core SDK
       - name: Setup .NET Core
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 6.0.x
+          dotnet-version: '6.0.x'
 
+      # Restore dependencies (e.g., NuGet packages)
       - name: Restore Packages
         run: dotnet restore ./ToDoApplication.sln
 
+      # Build the application
       - name: Build Solution
         run: dotnet build ./ToDoApplication.sln --configuration Release
 
+      # Publish the application to a specific folder
       - name: Publish Application
-        run: dotnet publish ./ToDoApplication.sln --configuration Release --output "${{ env.BUILD_DIR }}"
+        run: dotnet publish ./ToDoApplication.sln --configuration Release --output D:/MyProjects/Build/ToDo_Build
 
+      # Stop IIS App Pool before deployment
       - name: Stop IIS App Pool
         shell: powershell
         run: |
           Import-Module WebAdministration
-          Stop-WebAppPool -Name "${{ env.IIS_APP_POOL }}" -ErrorAction SilentlyContinue
+          Stop-WebAppPool -Name 'ToDo' -ErrorAction SilentlyContinue
 
+      # Deploy the build to IIS
       - name: Deploy to IIS
         shell: powershell
         run: |
-          Remove-Item -Recurse -Force "${{ env.IIS_PATH }}"/* -ErrorAction SilentlyContinue
-          Copy-Item -Path "${{ env.BUILD_DIR }}\*" -Destination "${{ env.IIS_PATH }}" -Recurse -Force
-          Start-WebAppPool -Name "${{ env.IIS_APP_POOL }}"
+          Remove-Item -Recurse -Force 'C:/inetpub/wwwroot/ToDo/*' -ErrorAction SilentlyContinue
+          Copy-Item -Path 'D:/MyProjects/Build/ToDo_Build/*' -Destination 'C:/inetpub/wwwroot/ToDo' -Recurse -Force
+          Start-WebAppPool -Name 'ToDo'
 
+      # Verify if the application is running on IIS
       - name: Verify Deployment
         shell: powershell
         run: |
-          Write-Host "Checking if site is running..."
-          $appPoolStatus = (Get-WebAppPoolState -Name "${{ env.IIS_APP_POOL }}").Value
-          if ($appPoolStatus -ne "Started") {
-            Write-Error "App Pool is not running. Deployment failed."
+          $appPoolStatus = (Get-WebAppPoolState -Name 'ToDo').Value
+          if ($appPoolStatus -ne 'Started') {
+            Write-Error 'App Pool is not running. Deployment failed.'
           } else {
-            Write-Host "Deployment succeeded. App Pool is running."
+            Write-Host 'Deployment succeeded. App Pool is running.'
           }
