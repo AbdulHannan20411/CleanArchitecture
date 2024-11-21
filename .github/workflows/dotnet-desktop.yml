@@ -1,0 +1,61 @@
+name: Deploy ToDo Application to IIS
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+env:
+  BUILD_DIR: D:/My Projects/Build/ToDo_Build
+  IIS_SITE_NAME: ToDo
+  IIS_APP_POOL: ToDo
+  IIS_PATH: C:/inetpub/wwwroot/ToDo
+
+jobs:
+  deploy:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET Core
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 6.0.x
+
+      - name: Restore Packages
+        run: dotnet restore ./ToDoApplication.sln
+
+      - name: Build Solution
+        run: dotnet build ./ToDoApplication.sln --configuration Release
+
+      - name: Publish Application
+        run: dotnet publish ./ToDoApplication.sln --configuration Release --output "${{ env.BUILD_DIR }}"
+
+      - name: Stop IIS App Pool
+        shell: powershell
+        run: |
+          Import-Module WebAdministration
+          Stop-WebAppPool -Name "${{ env.IIS_APP_POOL }}" -ErrorAction SilentlyContinue
+
+      - name: Deploy to IIS
+        shell: powershell
+        run: |
+          Remove-Item -Recurse -Force "${{ env.IIS_PATH }}"/* -ErrorAction SilentlyContinue
+          Copy-Item -Path "${{ env.BUILD_DIR }}\*" -Destination "${{ env.IIS_PATH }}" -Recurse -Force
+          Start-WebAppPool -Name "${{ env.IIS_APP_POOL }}"
+
+      - name: Verify Deployment
+        shell: powershell
+        run: |
+          Write-Host "Checking if site is running..."
+          $appPoolStatus = (Get-WebAppPoolState -Name "${{ env.IIS_APP_POOL }}").Value
+          if ($appPoolStatus -ne "Started") {
+            Write-Error "App Pool is not running. Deployment failed."
+          } else {
+            Write-Host "Deployment succeeded. App Pool is running."
+          }
