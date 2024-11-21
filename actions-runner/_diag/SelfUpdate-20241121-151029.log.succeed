@@ -1,0 +1,22 @@
+[21/11/2024 20:10:29.96] --------whoami-------- 
+desktop-4caq0sm\rootpointers
+[21/11/2024 20:10:30.05] --------whoami-------- 
+[21/11/2024 20:10:30.06] Waiting for Runner.Listener.exe (18840) to complete 
+Runner.Listener.exe          18840 Console                    7     66,008 K
+[21/11/2024 20:10:30.39] Process 18840 still running, check again after 1 second. 
+Runner.Listener.exe          18840 Console                    7     71,384 K
+[21/11/2024 20:10:31.67] Process 18840 still running, check again after 1 second. 
+[21/11/2024 20:10:32.82] Process 18840 finished running 
+[21/11/2024 20:10:32.82] Sleep 1 more second to make sure process exited 
+[21/11/2024 20:10:33.86] Re-organize folders 
+[21/11/2024 20:10:33.90] move "D:\My Projects\ToDoApplication\actions-runner\bin" "D:\My Projects\ToDoApplication\actions-runner\bin.2.309.0" 
+        1 dir(s) moved.
+[21/11/2024 20:10:33.95] move "D:\My Projects\ToDoApplication\actions-runner\externals" "D:\My Projects\ToDoApplication\actions-runner\externals.2.309.0" 
+        1 dir(s) moved.
+[21/11/2024 20:10:33.96] Create junction bin folder 
+Junction created for D:\My Projects\ToDoApplication\actions-runner\bin <<===>> D:\My Projects\ToDoApplication\actions-runner\bin.2.320.0
+[21/11/2024 20:10:33.98] Create junction externals folder 
+Junction created for D:\My Projects\ToDoApplication\actions-runner\externals <<===>> D:\My Projects\ToDoApplication\actions-runner\externals.2.320.0
+[21/11/2024 20:10:34.00] Update succeed 
+[21/11/2024 20:10:34.01] update.finished file creation succeed 
+[21/11/2024 20:10:34.02] Rename "D:\My Projects\ToDoApplication\actions-runner\_diag\SelfUpdate-20241121-151029.log" to be "D:\My Projects\ToDoApplication\actions-runner\_diag\SelfUpdate-20241121-151029.log.succeed" 
