@@ -3,10 +3,10 @@ name: Deploy ToDo Application to IIS
 on:
   push:
     branches:
-      - master
+      - master  # Trigger workflow on push to the 'master' branch
   pull_request:
     branches:
-      - master
+      - master  # Trigger workflow on pull request to the 'master' branch
 
 env:
   BUILD_DIR: D:/My Projects/Build/ToDo_Build
@@ -21,9 +21,6 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
-
-      - name: Checkout Submodules (if applicable)
-        run: git submodule update --init --recursive
 
       - name: Setup .NET Core
         uses: actions/setup-dotnet@v4
