@@ -3,10 +3,10 @@ name: Deploy ToDo Application to IIS
 on:
   push:
     branches:
-      - main
+      - master  # Change 'main' to 'master'
   pull_request:
     branches:
-      - main
+      - master  # Change 'main' to 'master'
 
 env:
   BUILD_DIR: D:/My Projects/Build/ToDo_Build
